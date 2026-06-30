@@ -84,8 +84,9 @@ void logSD(void* param) {
   SensorData temp_data;
   while(1) {
     unsigned long start = millis();
-    if(uxSemaphoreGetCount(countingLog_semaphore) > 0) {
-      int execution_time = random(10,300);
+    int count = uxSemaphoreGetCount(countingLog_semaphore);
+    while(count > 0) {
+      int execution_time = random(10,50); //7 * 50 = 350 (close to 300ms) 
       xSemaphoreTake(countingLog_semaphore,0);
 
       if(xSemaphoreTake(data_mutex, portMAX_DELAY) == pdTRUE) {
@@ -108,6 +109,7 @@ void logSD(void* param) {
       
       //Simulate fluactuation logging delay
       vTaskDelay(pdMS_TO_TICKS(execution_time));
+      count--;
     }
 
     if((xTaskGetTickCount() - lastWake) > period) {
@@ -129,7 +131,7 @@ void blinkLED(void* param) {
   while(1) {
     unsigned long start = millis();
     digitalWrite(PIN_LED, led_status=!led_status);
-     if((xTaskGetTickCount() - lastWake) > period) {
+    if((xTaskGetTickCount() - lastWake) > period) {
       Serial.printf("[CRITICAL] LED blinking missed deadlines!\n\r");
     }
 
